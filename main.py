@@ -1,3 +1,4 @@
+from fastapi import Request
 from fastapi import FastAPI, Query
 from skyfield.api import load, wgs84
 
@@ -45,3 +46,19 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
             continue
 
     return {"visible_objects": visible}
+@app.post("/webhook")
+async def webhook(request: Request):
+    print("🔥 Webhook hit")
+
+    event = await request.json()
+    print("Event type:", event.get('type'))
+    
+    if event and event.get('type') == 'checkout.session.completed':
+        session = event['data']['object']
+
+        phone = session.get('customer_details', {}).get('phone')
+
+        print("Customer phone:", phone)
+        print("✅ PAYMENT SUCCESSFUL")
+
+    return {"status": "ok"}
