@@ -62,3 +62,16 @@ async def webhook(request: Request):
         print("✅ PAYMENT SUCCESSFUL")
 
     return {"status": "ok"}
+
+from fastapi.responses import Response
+from twilio.twiml.messaging_response import MessagingResponse
+
+@app.post("/sms")
+async def sms_reply(request: Request):
+    form = await request.form()
+    incoming_msg = form.get("Body", "").strip()
+
+    resp = MessagingResponse()
+    resp.message(f"You said: {incoming_msg}")
+
+    return Response(content=str(resp), media_type="application/xml")
