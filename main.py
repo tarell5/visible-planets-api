@@ -1,21 +1,26 @@
 from fastapi import Request
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from skyfield.api import load, wgs84
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 @app.get("/visible-objects")
 def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
     ts = load.timescale()
     eph = load('de421.bsp')
-
     t = ts.now()
     observer = wgs84.latlon(lat, lon)
     earth = eph['earth']
     obs = earth + observer
-
     visible = []
-
     celestial_objects = [
         ("Mercury", "planet"),
         ("Venus", "planet"),
@@ -27,13 +32,11 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
         ("Pluto", "dwarf planet"),
         ("Moon", "moon")
     ]
-
     for name, obj_type in celestial_objects:
         try:
             body = eph[name]
             astrometric = obs.at(t).observe(body)
             alt, az, _ = astrometric.apparent().altaz()
-
             if alt.degrees > 0:
                 visible.append({
                     "object": name,
@@ -42,25 +45,19 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
                     "azimuth": round(az.degrees, 2)
                 })
         except KeyError:
-            # Skip if object is not in the ephemeris file
             continue
-
     return {"visible_objects": visible}
+
 @app.post("/webhook")
 async def webhook(request: Request):
     print("🔥 Webhook hit")
-
     event = await request.json()
     print("Event type:", event.get('type'))
-    
     if event and event.get('type') == 'checkout.session.completed':
         session = event['data']['object']
-
         phone = session.get('customer_details', {}).get('phone')
-
         print("Customer phone:", phone)
         print("✅ PAYMENT SUCCESSFUL")
-
     return {"status": "ok"}
 
 from fastapi.responses import Response
@@ -70,8 +67,6 @@ from twilio.twiml.messaging_response import MessagingResponse
 async def sms_reply(request: Request):
     form = await request.form()
     incoming_msg = form.get("Body", "").strip()
-
     resp = MessagingResponse()
     resp.message(f"You said: {incoming_msg}")
-
     return Response(content=str(resp), media_type="application/xml")
