@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from skyfield.api import load, wgs84
 
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,33 +19,37 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
     observer = wgs84.latlon(lat, lon)
     earth = eph['earth']
     obs = earth + observer
+
     visible = []
     celestial_objects = [
-        ("Mercury", "planet"),
-        ("Venus", "planet"),
-        ("Mars", "planet"),
-        ("Jupiter", "planet"),
-        ("Saturn", "planet"),
-        ("Uranus", "planet"),
-        ("Neptune", "planet"),
-        ("Pluto", "dwarf planet"),
-        ("Moon", "moon")
+        ("mercury",            "Mercury", "planet"),
+        ("venus",              "Venus",   "planet"),
+        ("mars",               "Mars",    "planet"),
+        ("jupiter barycenter", "Jupiter", "planet"),
+        ("saturn barycenter",  "Saturn",  "planet"),
+        ("uranus barycenter",  "Uranus",  "planet"),
+        ("neptune barycenter", "Neptune", "planet"),
+        ("pluto barycenter",   "Pluto",   "dwarf planet"),
+        ("moon",               "Moon",    "moon"),
     ]
-    for name, obj_type in celestial_objects:
+
+    for eph_key, display_name, obj_type in celestial_objects:
         try:
-            body = eph[name]
+            body = eph[eph_key]
             astrometric = obs.at(t).observe(body)
             alt, az, _ = astrometric.apparent().altaz()
             if alt.degrees > 0:
                 visible.append({
-                    "object": name,
+                    "object": display_name,
                     "type": obj_type,
                     "altitude": round(alt.degrees, 2),
                     "azimuth": round(az.degrees, 2)
                 })
         except KeyError:
             continue
+
     return {"visible_objects": visible}
+
 
 @app.post("/webhook")
 async def webhook(request: Request):
@@ -59,6 +62,7 @@ async def webhook(request: Request):
         print("Customer phone:", phone)
         print("✅ PAYMENT SUCCESSFUL")
     return {"status": "ok"}
+
 
 from fastapi.responses import Response
 from twilio.twiml.messaging_response import MessagingResponse
