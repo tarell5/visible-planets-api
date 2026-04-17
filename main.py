@@ -1,7 +1,9 @@
 from fastapi import Request
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from skyfield.api import load, wgs84
+from fastapi.responses import Response
+from skyfield.api import load, wgs84, Star
+from twilio.twiml.messaging_response import MessagingResponse
 
 app = FastAPI()
 app.add_middleware(
@@ -21,6 +23,8 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
     obs = earth + observer
 
     visible = []
+
+    # ── Planets & Moon ──────────────────────────────────────────────
     celestial_objects = [
         ("mercury",            "Mercury", "planet"),
         ("venus",              "Venus",   "planet"),
@@ -48,6 +52,26 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
         except KeyError:
             continue
 
+    # ── Stars & Constellations ──────────────────────────────────────
+    star_objects = [
+        ("Vega",  "star", Star(ra_hours=18.6156, dec_degrees=38.7837)),
+        ("Orion", "star", Star(ra_hours=5.9195,  dec_degrees=7.4071)),  # anchored to Betelgeuse
+    ]
+
+    for display_name, obj_type, star in star_objects:
+        try:
+            astrometric = obs.at(t).observe(star)
+            alt, az, _ = astrometric.apparent().altaz()
+            if alt.degrees > 0:
+                visible.append({
+                    "object": display_name,
+                    "type": obj_type,
+                    "altitude": round(alt.degrees, 2),
+                    "azimuth": round(az.degrees, 2)
+                })
+        except Exception:
+            continue
+
     return {"visible_objects": visible}
 
 
@@ -63,9 +87,6 @@ async def webhook(request: Request):
         print("✅ PAYMENT SUCCESSFUL")
     return {"status": "ok"}
 
-
-from fastapi.responses import Response
-from twilio.twiml.messaging_response import MessagingResponse
 
 @app.post("/sms")
 async def sms_reply(request: Request):
