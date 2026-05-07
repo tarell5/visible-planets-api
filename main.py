@@ -53,9 +53,18 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
             continue
 
     # ── Stars & Constellations ──────────────────────────────────────
+    # Anchored to a real star's RA/Dec, but output as the display name
     star_objects = [
-        ("Vega",  "star", Star(ra_hours=18.6156, dec_degrees=38.7837)),
-        ("Orion", "star", Star(ra_hours=5.9195,  dec_degrees=7.4071)),  # anchored to Betelgeuse
+        # Stars
+        ("Vega",       "star",          Star(ra_hours=18.6156, dec_degrees=38.7837)),  # Vega
+        ("Orion",      "constellation", Star(ra_hours=5.9195,  dec_degrees=7.4071)),   # Betelgeuse
+        ("Arcturus",   "star",          Star(ra_hours=14.2610, dec_degrees=19.1822)),  # Arcturus
+        ("Regulus",    "star",          Star(ra_hours=10.1395, dec_degrees=11.9672)),  # Regulus
+        ("Spica",      "star",          Star(ra_hours=13.4199, dec_degrees=-11.1613)), # Spica
+        ("Polaris",    "star",          Star(ra_hours=2.5303,  dec_degrees=89.2641)),  # Polaris (North Star)
+        # Constellations
+        ("Big_Dipper", "constellation", Star(ra_hours=11.0621, dec_degrees=56.3824)),  # Anchored to Dubhe
+        ("Cassiopeia", "constellation", Star(ra_hours=0.6751,  dec_degrees=56.5373)),  # Anchored to Schedar
     ]
 
     for display_name, obj_type, star in star_objects:
