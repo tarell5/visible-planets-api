@@ -3,7 +3,14 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from skyfield.api import load, wgs84, Star
+from skyfield.iokit import Loader
 from twilio.twiml.messaging_response import MessagingResponse
+import os
+
+# ── Load ephemeris safely at startup ────────────────────────────────
+load_path = Loader('/tmp')  # Railway's writable directory
+eph = load_path('de421.bsp')
+ts = load_path.timescale()
 
 app = FastAPI()
 app.add_middleware(
@@ -15,8 +22,6 @@ app.add_middleware(
 
 @app.get("/visible-objects")
 def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
-    ts = load.timescale()
-    eph = load('de421.bsp')
     t = ts.now()
     observer = wgs84.latlon(lat, lon)
     earth = eph['earth']
@@ -26,15 +31,15 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
 
     # ── Planets & Moon ──────────────────────────────────────────────
     celestial_objects = [
-        ("mercury",            "Mercury", "planet"),
-        ("venus",              "Venus",   "planet"),
-        ("mars",               "Mars",    "planet"),
-        ("jupiter barycenter", "Jupiter", "planet"),
-        ("saturn barycenter",  "Saturn",  "planet"),
-        ("uranus barycenter",  "Uranus",  "planet"),
-        ("neptune barycenter", "Neptune", "planet"),
-        ("pluto barycenter",   "Pluto",   "dwarf planet"),
-        ("moon",               "Moon",    "moon"),
+        ("mercury",            "Mercury",  "planet"),
+        ("venus",              "Venus",    "planet"),
+        ("mars",               "Mars",     "planet"),
+        ("jupiter barycenter", "Jupiter",  "planet"),
+        ("saturn barycenter",  "Saturn",   "planet"),
+        ("uranus barycenter",  "Uranus",   "planet"),
+        ("neptune barycenter", "Neptune",  "planet"),
+        ("pluto barycenter",   "Pluto",    "dwarf planet"),
+        ("moon",               "Moon",     "moon"),
     ]
 
     for eph_key, display_name, obj_type in celestial_objects:
@@ -53,18 +58,15 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
             continue
 
     # ── Stars & Constellations ──────────────────────────────────────
-    # Anchored to a real star's RA/Dec, but output as the display name
     star_objects = [
-        # Stars
-        ("Vega",       "star",          Star(ra_hours=18.6156, dec_degrees=38.7837)),  # Vega
-        ("Orion",      "constellation", Star(ra_hours=5.9195,  dec_degrees=7.4071)),   # Betelgeuse
-        ("Arcturus",   "star",          Star(ra_hours=14.2610, dec_degrees=19.1822)),  # Arcturus
-        ("Regulus",    "star",          Star(ra_hours=10.1395, dec_degrees=11.9672)),  # Regulus
-        ("Spica",      "star",          Star(ra_hours=13.4199, dec_degrees=-11.1613)), # Spica
-        ("Polaris",    "star",          Star(ra_hours=2.5303,  dec_degrees=89.2641)),  # Polaris (North Star)
-        # Constellations
-        ("Big_Dipper", "constellation", Star(ra_hours=11.0621, dec_degrees=56.3824)),  # Anchored to Dubhe
-        ("Cassiopeia", "constellation", Star(ra_hours=0.6751,  dec_degrees=56.5373)),  # Anchored to Schedar
+        ("Vega",        "star",          Star(ra_hours=18.6156, dec_degrees=38.7837)),
+        ("Orion",       "constellation", Star(ra_hours=5.9195,  dec_degrees=7.4071)),
+        ("Arcturus",    "star",          Star(ra_hours=14.2610, dec_degrees=19.1822)),
+        ("Regulus",     "star",          Star(ra_hours=10.1395, dec_degrees=11.9672)),
+        ("Spica",       "star",          Star(ra_hours=13.4199, dec_degrees=-11.1613)),
+        ("Polaris",     "star",          Star(ra_hours=2.5303,  dec_degrees=89.2641)),
+        ("Big_Dipper",  "constellation", Star(ra_hours=11.0621, dec_degrees=56.3824)),
+        ("Cassiopeia",  "constellation", Star(ra_hours=0.6751,  dec_degrees=56.5373)),
     ]
 
     for display_name, obj_type, star in star_objects:
