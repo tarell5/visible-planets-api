@@ -2,13 +2,12 @@ from fastapi import Request
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from skyfield.api import load, wgs84, Star
+from skyfield.api import wgs84, Star
 from skyfield.iokit import Loader
 from twilio.twiml.messaging_response import MessagingResponse
-import os
 
 # ── Load ephemeris safely at startup ────────────────────────────────
-load_path = Loader('/tmp')  # Railway's writable directory
+load_path = Loader('/tmp')
 eph = load_path('de421.bsp')
 ts = load_path.timescale()
 
@@ -57,16 +56,42 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
         except KeyError:
             continue
 
-    # ── Stars & Constellations ──────────────────────────────────────
+    # ── Stars, Constellations & Asterisms ───────────────────────────
     star_objects = [
-        ("Vega",        "star",          Star(ra_hours=18.6156, dec_degrees=38.7837)),
-        ("Orion",       "constellation", Star(ra_hours=5.9195,  dec_degrees=7.4071)),
-        ("Arcturus",    "star",          Star(ra_hours=14.2610, dec_degrees=19.1822)),
-        ("Regulus",     "star",          Star(ra_hours=10.1395, dec_degrees=11.9672)),
-        ("Spica",       "star",          Star(ra_hours=13.4199, dec_degrees=-11.1613)),
-        ("Polaris",     "star",          Star(ra_hours=2.5303,  dec_degrees=89.2641)),
-        ("Big_Dipper",  "constellation", Star(ra_hours=11.0621, dec_degrees=56.3824)),
-        ("Cassiopeia",  "constellation", Star(ra_hours=0.6751,  dec_degrees=56.5373)),
+
+        # ── Stars ───────────────────────────────────────────────────
+        ("Arcturus",       "star",      Star(ra_hours=14.2610, dec_degrees=19.1822)),   # Arcturus
+        ("Spica",          "star",      Star(ra_hours=13.4199, dec_degrees=-11.1613)),  # Spica
+        ("Vega",           "star",      Star(ra_hours=18.6156, dec_degrees=38.7837)),   # Vega
+        ("The_North_Star", "star",      Star(ra_hours=2.5303,  dec_degrees=89.2641)),   # Polaris
+        ("Antares",        "star",      Star(ra_hours=16.4901, dec_degrees=-26.4320)),  # Antares
+        ("Altair",         "star",      Star(ra_hours=19.8463, dec_degrees=8.8683)),    # Altair
+        ("Deneb",          "star",      Star(ra_hours=20.6905, dec_degrees=45.2803)),   # Deneb
+        ("Regulus",        "star",      Star(ra_hours=10.1395, dec_degrees=11.9672)),   # Regulus
+
+        # ── Constellations ──────────────────────────────────────────
+        ("Orion",          "constellation", Star(ra_hours=5.9195,  dec_degrees=7.4071)),    # Betelgeuse
+        ("Bootes",         "constellation", Star(ra_hours=14.2610, dec_degrees=19.1822)),   # Arcturus
+        ("Scorpius",       "constellation", Star(ra_hours=16.4901, dec_degrees=-26.4320)),  # Antares
+        ("Leo",            "constellation", Star(ra_hours=10.1395, dec_degrees=11.9672)),   # Regulus
+        ("Gemini",         "constellation", Star(ra_hours=7.5755,  dec_degrees=31.8883)),   # Pollux
+        ("Taurus",         "constellation", Star(ra_hours=4.5988,  dec_degrees=16.5093)),   # Aldebaran
+        ("Canis_Major",    "constellation", Star(ra_hours=6.7526,  dec_degrees=-16.7161)),  # Sirius
+        ("Canis_Minor",    "constellation", Star(ra_hours=7.6550,  dec_degrees=5.2250)),    # Procyon
+        ("Lyra",           "constellation", Star(ra_hours=18.6156, dec_degrees=38.7837)),   # Vega
+        ("Aquila",         "constellation", Star(ra_hours=19.8463, dec_degrees=8.8683)),    # Altair
+        ("Cygnus",         "constellation", Star(ra_hours=20.6905, dec_degrees=45.2803)),   # Deneb
+        ("Perseus",        "constellation", Star(ra_hours=3.0794,  dec_degrees=40.9556)),   # Mirfak
+        ("Delphinus",      "constellation", Star(ra_hours=20.6603, dec_degrees=15.9122)),   # Rotanev
+        ("Sagittarius",    "constellation", Star(ra_hours=19.0437, dec_degrees=-29.8800)),  # Kaus Australis
+        ("Cassiopeia",     "constellation", Star(ra_hours=0.6751,  dec_degrees=56.5373)),   # Schedar
+        ("Corona_Borealis","constellation", Star(ra_hours=15.5784, dec_degrees=26.7148)),   # Alphecca
+
+        # ── Asterisms ───────────────────────────────────────────────
+        ("The_Big_Dipper",    "asterism", Star(ra_hours=11.0621, dec_degrees=56.3824)),  # Dubhe
+        ("The_Teapot",        "asterism", Star(ra_hours=19.0437, dec_degrees=-29.8800)), # Kaus Australis (Sagittarius)
+        ("Summer_Triangle",   "asterism", Star(ra_hours=18.6156, dec_degrees=38.7837)),  # Vega (brightest)
+        ("Spring_Triangle",   "asterism", Star(ra_hours=14.2610, dec_degrees=19.1822)),  # Arcturus (brightest)
     ]
 
     for display_name, obj_type, star in star_objects:
