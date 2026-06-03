@@ -83,7 +83,6 @@ def get_visible_objects(lat: float = Query(...), lon: float = Query(...)):
         ("Cygnus",         "constellation", Star(ra_hours=20.6905, dec_degrees=45.2803)),   # Deneb
         ("Perseus",        "constellation", Star(ra_hours=3.0794,  dec_degrees=40.9556)),   # Mirfak
         ("Delphinus",      "constellation", Star(ra_hours=20.6603, dec_degrees=15.9122)),   # Rotanev
-        ("Sagittarius",    "constellation", Star(ra_hours=19.0437, dec_degrees=-29.8800)),  # Kaus Australis
         ("Cassiopeia",     "constellation", Star(ra_hours=0.6751,  dec_degrees=56.5373)),   # Schedar
         ("Corona_Borealis","constellation", Star(ra_hours=15.5784, dec_degrees=26.7148)),   # Alphecca
 
